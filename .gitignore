@@ -4,3 +4,11 @@ node_modules/
 *.db
 .env
 .env.local
+
+# 각 프로젝트는 별도 저장소로 관리
+bucket-list-main/
+claude-code-mastery/
+my-profile-site/
+output-style-test/
+starterkit/
+user-memory-setup/
