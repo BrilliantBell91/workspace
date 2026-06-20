@@ -1,0 +1,40 @@
+# 시스템 파일
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+*.sublime-project
+*.sublime-workspace
+
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# 빌드 결과
+dist/
+build/
+out/
+
+# 로컬 환경 파일
+.env
+.env.local
+.env.*.local
+
+# 임시 파일
+*.tmp
+*.temp
+.cache/
+
+# OS 특정
+.Spotlight-V100/
+.Trashes/
+ehthumbs.db
