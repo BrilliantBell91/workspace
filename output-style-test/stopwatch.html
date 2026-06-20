@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스톱워치</title>
+    <!-- Tailwind CSS를 인터넷에서 가져오기 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-purple-100 to-blue-100 min-h-screen flex items-center justify-center p-4">
+    <!-- 전체 컨테이너 -->
+    <div class="w-full max-w-md">
+        <!-- 메인 카드 -->
+        <div class="bg-white rounded-3xl shadow-2xl p-8">
+            <!-- 제목 -->
+            <h1 class="text-4xl font-bold text-center text-gray-800 mb-12">
+                ⏱️ 스톱워치
+            </h1>
+
+            <!-- 시간 표시 영역 -->
+            <!-- 이 부분이 스톱워치의 핵심! 큰 숫자로 시간을 표시합니다 -->
+            <div class="bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 mb-8">
+                <!-- 시간 디스플레이 -->
+                <!-- id="display"로 JavaScript에서 이 요소를 찾을 수 있게 함 -->
+                <div id="display" class="text-6xl font-bold text-center text-white font-mono tracking-wider">
+                    00:00:00
+                </div>
+                <!-- 밀리초 표시 (선택사항이지만 더 정확한 계시를 위해) -->
+                <div id="milliseconds" class="text-2xl font-bold text-center text-gray-400 font-mono mt-2">
+                    00
+                </div>
+            </div>
+
+            <!-- 버튼 영역 -->
+            <div class="flex gap-4 mb-6">
+                <!-- 시작/일시정지 버튼 -->
+                <!-- id="toggleBtn"으로 JavaScript에서 찾고, 상태에 따라 색상과 텍스트를 변경합니다 -->
+                <button
+                    id="toggleBtn"
+                    onclick="toggleStopwatch()"
+                    class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl transition duration-200 transform hover:scale-105 text-lg">
+                    ▶️ 시작
+                </button>
+
+                <!-- 리셋 버튼 -->
+                <button
+                    onclick="resetStopwatch()"
+                    class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-4 px-6 rounded-xl transition duration-200 transform hover:scale-105 text-lg">
+                    🔄 리셋
+                </button>
+            </div>
+
+            <!-- 상태 표시 (진행 중/일시정지됨) -->
+            <div class="text-center">
+                <p id="status" class="text-gray-500 text-sm font-medium">
+                    준비 완료
+                </p>
+            </div>
+        </div>
+
+        <!-- 팁 영역 -->
+        <div class="mt-6 text-center">
+            <p class="text-gray-600 text-sm">
+                💡 팁: 시작 버튼을 누르면 일시정지로 변경됩니다
+            </p>
+        </div>
+    </div>
+
+    <!-- JavaScript 코드 -->
+    <script>
+        // ===== 시간 저장 변수 =====
+        // 스톱워치가 계산한 총 시간을 밀리초 단위로 저장
+        let elapsedTime = 0;
+
+        // 마지막으로 시작한 시간을 저장하는 변수
+        // (일시정지했다가 다시 시작할 때, 정확한 시간을 계산하기 위해 필요)
+        let lastStartTime = 0;
+
+        // 스톱워치가 진행 중인지 확인하는 변수 (true = 진행 중, false = 일시정지)
+        let isRunning = false;
+
+        // 화면을 계속 업데이트하기 위한 ID (나중에 멈출 때 필요)
+        let animationFrameId = null;
+
+        // ===== 스톱워치 토글 함수 (시작/일시정지) =====
+        function toggleStopwatch() {
+            if (isRunning) {
+                // 현재 진행 중이면 → 일시정지
+                pauseStopwatch();
+            } else {
+                // 현재 일시정지 중이면 → 시작
+                startStopwatch();
+            }
+        }
+
+        // ===== 스톱워치 시작 함수 =====
+        function startStopwatch() {
+            isRunning = true;  // 진행 중 표시
+
+            // 버튼 상태 업데이트
+            updateButtonState();
+
+            // 현재 시간 저장 (업데이트가 시작되는 시점)
+            lastStartTime = Date.now();
+
+            // 화면 계속 업데이트
+            updateDisplay();
+        }
+
+        // ===== 스톱워치 일시정지 함수 =====
+        function pauseStopwatch() {
+            isRunning = false;  // 일시정지 표시
+
+            // 버튼 상태 업데이트
+            updateButtonState();
+
+            // 지난 시간을 총 시간에 더하기
+            // (다시 시작할 때를 대비해서 지금까지의 시간을 저장)
+            elapsedTime += Date.now() - lastStartTime;
+
+            // 화면 업데이트 중단
+            if (animationFrameId) {
+                cancelAnimationFrame(animationFrameId);
+            }
+        }
+
+        // ===== 스톱워치 리셋 함수 =====
+        function resetStopwatch() {
+            // 진행 중이면 멈추기
+            if (isRunning) {
+                isRunning = false;
+                if (animationFrameId) {
+                    cancelAnimationFrame(animationFrameId);
+                }
+            }
+
+            // 모든 시간 값을 0으로 초기화
+            elapsedTime = 0;
+            lastStartTime = 0;
+
+            // 버튼 상태 업데이트
+            updateButtonState();
+
+            // 화면 업데이트 (00:00:00 표시)
+            updateDisplay();
+        }
+
+        // ===== 화면 업데이트 함수 =====
+        function updateDisplay() {
+            // 현재까지 지난 총 시간 계산
+            let currentElapsed = elapsedTime;
+            if (isRunning) {
+                // 진행 중이면: 이미 저장된 시간 + (지금 - 시작 시간)
+                currentElapsed = elapsedTime + (Date.now() - lastStartTime);
+            }
+
+            // 밀리초 → 초, 분, 시간으로 변환
+            // 예: 3661000 밀리초 = 1시간 1분 1초
+            const totalSeconds = Math.floor(currentElapsed / 1000);
+            const hours = Math.floor(totalSeconds / 3600);      // 1시간 = 3600초
+            const minutes = Math.floor((totalSeconds % 3600) / 60);  // 남은 초를 분으로
+            const seconds = totalSeconds % 60;                  // 남은 초
+            const milliseconds = Math.floor((currentElapsed % 1000) / 10);  // 밀리초를 센트초로 변환
+
+            // 시간을 HH:MM:SS 형식으로 포맷팅
+            const display = document.getElementById("display");
+            display.textContent = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+            // 밀리초 표시 (00 ~ 99)
+            const millisecondsDisplay = document.getElementById("milliseconds");
+            millisecondsDisplay.textContent = String(milliseconds).padStart(2, '0');
+
+            // 진행 중이면 다음 업데이트를 예약
+            // (부드러운 애니메이션을 위해 매 프레임마다 업데이트)
+            if (isRunning) {
+                animationFrameId = requestAnimationFrame(updateDisplay);
+            }
+        }
+
+        // ===== 버튼 상태 업데이트 함수 =====
+        function updateButtonState() {
+            const toggleBtn = document.getElementById("toggleBtn");
+            const status = document.getElementById("status");
+
+            if (isRunning) {
+                // 진행 중일 때
+                toggleBtn.textContent = "⏸️ 일시정지";
+                toggleBtn.className = "flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-4 px-6 rounded-xl transition duration-200 transform hover:scale-105 text-lg";
+                status.textContent = "⏳ 진행 중...";
+                status.className = "text-green-600 text-sm font-medium";
+            } else {
+                // 일시정지 중일 때
+                toggleBtn.textContent = "▶️ 시작";
+                toggleBtn.className = "flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-4 px-6 rounded-xl transition duration-200 transform hover:scale-105 text-lg";
+                status.textContent = "⏸️ 일시정지됨";
+                status.className = "text-gray-500 text-sm font-medium";
+            }
+        }
+
+        // ===== 초기 상태 설정 =====
+        // 페이지가 로드될 때 실행
+        updateDisplay();
+        updateButtonState();
+    </script>
+</body>
+</html>

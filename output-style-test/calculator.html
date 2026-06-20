@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>계산기</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .calculator {
+            background: #2d3436;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .display {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+        }
+
+        .previous {
+            color: #888;
+            font-size: 18px;
+            min-height: 24px;
+            margin-bottom: 8px;
+        }
+
+        .current {
+            color: #00d4ff;
+            font-size: 36px;
+            font-weight: bold;
+            min-height: 44px;
+            word-wrap: break-word;
+            word-break: break-all;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        button {
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: white;
+        }
+
+        .number {
+            background: #444;
+        }
+
+        .number:hover {
+            background: #555;
+        }
+
+        .number:active {
+            transform: scale(0.95);
+        }
+
+        .operator {
+            background: #ff9500;
+        }
+
+        .operator:hover {
+            background: #ffb039;
+        }
+
+        .operator:active {
+            transform: scale(0.95);
+        }
+
+        .equals {
+            background: #27ae60;
+            grid-column: span 2;
+        }
+
+        .equals:hover {
+            background: #2ecc71;
+        }
+
+        .equals:active {
+            transform: scale(0.95);
+        }
+
+        .clear {
+            background: #e74c3c;
+            grid-column: span 2;
+        }
+
+        .clear:hover {
+            background: #ec7063;
+        }
+
+        .clear:active {
+            transform: scale(0.95);
+        }
+
+        .delete {
+            background: #3498db;
+        }
+
+        .delete:hover {
+            background: #5dade2;
+        }
+
+        .delete:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="display">
+            <div class="previous" id="previousDisplay"></div>
+            <div class="current" id="currentDisplay">0</div>
+        </div>
+
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="delete" onclick="deleteNumber()">←</button>
+            <button class="operator" onclick="chooseOperator('÷')">÷</button>
+            <button class="operator" onclick="chooseOperator('×')">×</button>
+
+            <button class="number" onclick="appendNumber('7')">7</button>
+            <button class="number" onclick="appendNumber('8')">8</button>
+            <button class="number" onclick="appendNumber('9')">9</button>
+            <button class="operator" onclick="chooseOperator('-')">-</button>
+
+            <button class="number" onclick="appendNumber('4')">4</button>
+            <button class="number" onclick="appendNumber('5')">5</button>
+            <button class="number" onclick="appendNumber('6')">6</button>
+            <button class="operator" onclick="chooseOperator('+')">+</button>
+
+            <button class="number" onclick="appendNumber('1')">1</button>
+            <button class="number" onclick="appendNumber('2')">2</button>
+            <button class="number" onclick="appendNumber('3')">3</button>
+            <button class="number" onclick="appendNumber('.')">.</button>
+
+            <button class="number" onclick="appendNumber('0')" style="grid-column: span 2;">0</button>
+            <button class="equals" onclick="compute()">=</button>
+        </div>
+    </div>
+
+    <script>
+        let previousValue = '';
+        let currentValue = '0';
+        let operation = null;
+
+        const previousDisplay = document.getElementById('previousDisplay');
+        const currentDisplay = document.getElementById('currentDisplay');
+
+        function updateDisplay() {
+            currentDisplay.textContent = currentValue === '' ? '0' : currentValue;
+
+            if (operation) {
+                previousDisplay.textContent = `${previousValue} ${operation}`;
+            } else {
+                previousDisplay.textContent = '';
+            }
+        }
+
+        function appendNumber(num) {
+            // 소수점은 한 번만 허용
+            if (num === '.' && currentValue.includes('.')) {
+                return;
+            }
+
+            // 0으로 시작하는 것을 방지
+            if (currentValue === '0' && num !== '.') {
+                currentValue = num;
+            } else {
+                currentValue += num;
+            }
+
+            updateDisplay();
+        }
+
+        function chooseOperator(op) {
+            // 현재 값이 없으면 연산자를 적용하지 않음
+            if (currentValue === '') {
+                return;
+            }
+
+            // 이전 연산이 있으면 먼저 계산
+            if (previousValue !== '' && currentValue !== '' && operation) {
+                compute();
+            }
+
+            previousValue = currentValue;
+            operation = op;
+            currentValue = '';
+
+            updateDisplay();
+        }
+
+        function compute() {
+            if (operation === null || previousValue === '' || currentValue === '') {
+                return;
+            }
+
+            let result;
+            const prev = parseFloat(previousValue);
+            const current = parseFloat(currentValue);
+
+            switch (operation) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '×':
+                    result = prev * current;
+                    break;
+                case '÷':
+                    if (current === 0) {
+                        alert('0으로 나눌 수 없습니다.');
+                        clearDisplay();
+                        return;
+                    }
+                    result = prev / current;
+                    break;
+                default:
+                    return;
+            }
+
+            // 소수점 자리 정리
+            currentValue = Math.round(result * 100000000) / 100000000 + '';
+            operation = null;
+            previousValue = '';
+
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            previousValue = '';
+            currentValue = '0';
+            operation = null;
+            updateDisplay();
+        }
+
+        function deleteNumber() {
+            if (currentValue.length <= 1) {
+                currentValue = '0';
+            } else {
+                currentValue = currentValue.slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        // 키보드 입력 지원
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '0' && e.key <= '9') appendNumber(e.key);
+            if (e.key === '.') appendNumber('.');
+            if (e.key === '+') chooseOperator('+');
+            if (e.key === '-') chooseOperator('-');
+            if (e.key === '*') chooseOperator('×');
+            if (e.key === '/') {
+                e.preventDefault();
+                chooseOperator('÷');
+            }
+            if (e.key === 'Enter' || e.key === '=') {
+                e.preventDefault();
+                compute();
+            }
+            if (e.key === 'Backspace') deleteNumber();
+            if (e.key === 'Escape') clearDisplay();
+        });
+
+        updateDisplay();
+    </script>
+</body>
+</html>
